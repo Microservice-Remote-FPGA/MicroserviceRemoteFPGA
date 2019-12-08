@@ -1,0 +1,8 @@
+Flask
+requests
+uuid
+SQLAlchemy
+psycopg2-binary
+redis
+rq
+python-dotenv

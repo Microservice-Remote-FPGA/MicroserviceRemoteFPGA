@@ -1,0 +1,71 @@
+version: '3.7'
+
+services:
+
+  web:
+    #restart: always
+    build: .
+    ports:
+      - '5000:5000'
+    command: run.py run -h 0.0.0.0
+    volumes:
+      - "/home/ec2-user/Flask RQ/Ver1/data:/data/"
+    environment:
+      - FLASK_DEBUG=1
+    env_file: 
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - webnet
+  
+  
+  worker:
+    #restart: always
+    build: .
+    command: run.py run_worker
+    env_file: 
+      - .env
+    volumes:
+      - "/home/ec2-user/Flask RQ/Ver1/data:/data/"
+    networks:
+      - webnet
+    depends_on:
+      - redis
+        
+  postgres:
+    image: postgres:11.0 #if using an existing image
+    networks:
+      - webnet
+    restart: always #what to do if container crashes
+    volumes:
+      - "/home/ec2-user/Flask postgresql/db-data:/var/lib/postgresql/data" #"/home/ec2-user/Flask RQ/Ver1/db-data:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+        
+  data:
+    image: postgres:11.0
+    networks:
+      - webnet
+    volumes:
+      - "/home/ec2-user/Flask postgresql/db-data:/var/lib/postgresql/data" #"/home/ec2-user/Flask RQ/Ver1/db-data:/var/lib/postgresql/data"
+    command: "true"
+
+  redis:
+    image: redis:4.0.11-alpine
+    networks:
+      - webnet
+  dashboard:
+    build: ./dashboard
+    image: dashboard
+    container_name: dashboard
+    networks:
+      - webnet
+    ports:
+      - '9181:9181'
+    command: rq-dashboard -H redis
+    
+    
+networks:
+  webnet:
